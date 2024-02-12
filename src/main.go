@@ -4,21 +4,22 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"ryanvoortman/go-rest-api/src/app"
+	database2 "ryanvoortman/go-rest-api/src/database"
 )
 
-func setUpRouter(router *mux.Router) {
-	router.Methods("Post").Path("/endpoint").HandlerFunc(postFunction)
-}
-
-func postFunction(w http.ResponseWriter, r *http.Request) {
-	log.Println("You called a thing")
-}
-
 func main() {
-	router := mux.NewRouter().StrictSlash(true)
+	database, err := database2.CreateDatabase()
+	if err != nil {
+		log.Fatal("Database connection failed: %s", err.Error())
+	}
 
-	setUpRouter(router)
+	app := &app.App{
+		Router:   mux.NewRouter().StrictSlash(true),
+		Database: database,
+	}
 
-	log.Fatal(http.ListenAndServe("8080", router))
+	app.SetupRouter()
 
+	log.Fatal(http.ListenAndServe("localhost:8080", app.Router))
 }
